@@ -151,11 +151,11 @@ def invobserve(r,y,nargout=1):
         Pr_y=np.matrix(kim[1])
         p0=fromFrame(r,p_r,3)
         p=p0[0]
-        P_r=np.matrix(p0[1])
+        P_r=p0[1]
         P_pr=np.matrix(p0[2])
         P_y=P_pr*Pr_y
         P_y=P_y.tolist() 
-        return([p,P_y])		
+        return([p,P_r,P_y])		
 
 
 #W=cloister(-4,4,-4,4,7) # Set of external landmarks of the form 2*N
@@ -208,15 +208,15 @@ for t in range(1):
 	print(R)
 	
 	for i in range(N):
-		s0=np.random.randn(2,1) #measurement noise
-		v=np.multiply(s,s0)
+		s0=np.random.randn(2,1) 
+		v=np.multiply(s,s0)  #measurement noise
 		print(v)
 		W1=[row[i] for row in W]
-		W1=np.reshape(W1,(2,1))
+		W1=np.reshape(W1,(2,1)) #reshaping back in the form 2*1
 		print(W1)
-		Y0=observe(R,W1)
+		Y0=observe(R,W1) 
 		print(Y0[0])
-		Y1=Y0[0]+v
+		Y1=Y0[0]+v  #Adding the measurement noise to the measurement of landmark
 		print(Y1)
 		j=0
 		for row in Y:
@@ -224,13 +224,13 @@ for t in range(1):
 			j=j+1
 	print(Y)
 	
-	m0=np.where(np.transpose(landmarks)!=0)
-	o=np.transpose(landmarks)[m0]
-	m=np.reshape(o,(np.shape(o)[0],1))
-	rm=np.union1d(r,o)
-	rm=rm.astype(int)
+	m0=np.where(np.transpose(landmarks)!=0) 
+	o=np.transpose(landmarks)[m0]  #pointers to landmark in the form of 1*e
+	m=np.reshape(o,(np.shape(o)[0],1)) #pointers to landmark in the form of e*1
+	rm=np.union1d(r,o)  # all used states
+	rm=rm.astype(int) # converting to int type for index usage
 	delta=x[r]
-	Estim_r=move(delta,U,n,3)
+	Estim_r=move(delta,U,n,3) #Estimator perturbated
 	x[r]=Estim_r[0]
 	
 	
@@ -241,16 +241,16 @@ for t in range(1):
 	A5=np.matrix(Estim_r[2])
 	P[np.ix_(r,o)]=np.array(A1*A2)
 	P[np.ix_(o,r)]=np.transpose(P[np.ix_(r,o)])
-	P[np.ix_(r,r)]=A1*A3*np.transpose(A1)+A5*A4*np.transpose(A5)
+	P[np.ix_(r,r)]=A1*A3*np.transpose(A1)+A5*A4*np.transpose(A5)  # The above part involves updation of Covariance Matrix
 	
 	G0=np.where(landmarks[1]!=0)
-	G=G0[0]
+	G=G0[0] # Return landmarks pointer
 	for i in G:
 		l=landmarks[:,i]
 		l=l.astype(int)
-		E=observe(x[r],x[l],3)
-		rl=np.union1d(r,l)
-		rl=rl.astype(int)
+		E=observe(x[r],x[l],3) # This part is equivalent to h(x) in EKF slam
+		rl=np.union1d(r,l) #Taking union of r and l
+		rl=rl.astype(int) # converting to int type for index usage
 		e=E[0]
 		E_r=E[1]
 		E_l=E[2]
@@ -259,10 +259,10 @@ for t in range(1):
 		A2=np.matrix(P[np.ix_(rl,rl)])
 		Ealpha=A1*A2*np.transpose(A1)
 		
-		Yi=Y[:,1]
+		Yi=Y[:,1] # Measurement of landmark i
 		Yi=np.reshape(Yi,(2,1))
-		z=np.subtract(Yi-e)
-		if z[1][0]>(math.pi):
+		z=np.subtract(Yi-e) # innovation Gaussian(z,Z)
+		if z[1][0]>(math.pi):  #We need values around zero for angles
 			z[1][0]=z[1][0]-2*(math.pi)
 		else:
 			z[1][0]=z[1][0]+2*(math.pi)
@@ -277,25 +277,41 @@ for t in range(1):
 		Qw=np.transpose(A4)*A5*A4
 		
 		if Qw<9:
-			K=A6*np.transpose(A1)*A5
+			K=A6*np.transpose(A1)*A5 # Kalman Gain
 			A7=np.matrix(K)
-			X[rm]=X[rm]+A7*A4
+			# Map updation using rm
+			X[rm]=X[rm]+A7*A4    
 			P[np.ix_(rm,rm)]=A8-(A7*A3*np.transpose(A7))
 	
 	
-	
-	lids=np.where(landspace[0]==0)
-	if len(lids[0])!=0:
+	# Landmark initialization-one new landmark at each iteration	
+	lids=np.where(landmarks[0]==0) # all non initialized landmarks
+	if len(lids[0])!=0: # there are still landmarks to initialize
+		print(len(lids[0]))
 		rand_index=randrange(0,len(lids[0]))
-		i=lids[rand_index]
+		i=lids[0][rand_index] #pick one landmark randomly
+		print(i)
 		l=np.where(mapspace==False)
 		l=l[1][0:2]
 		if len(l)!=0:
+			mapspace[0][l]=True
+			landmarks[:,i]=l
 			Yi=Y[:,i]
 			Yi=np.reshape(Yi,(2,1))
-			Landalpha=invobserve(x[r],Yi)
+			Landalpha=invobserve(x[r],Yi,3)
 			x[l]=Landalpha[0]
 			L_r=Landalpha[1]
-			L_y=Landaplha[2]
+			L_y=Landalpha[2]
 			
-			
+			A1=np.matrix(L_r)
+			A2=np.matrix(L_y)
+			A3=np.matrix(P[np.ix_(r,rm)])
+			A4=np.matrix(P[np.ix_(r,r)])
+			A5=np.matrix(S)
+			P[np.ix_(l,rm)]=A1*A3
+			P[np.ix_(rm,l)]=np.transpose(P[np.ix_(l,rm)])
+			P[np.ix_(l,l)]=A1*A4*np.transpose(A1)+A2*A5*np.transpose(A2)
+			print(P)
+			print(x)
+			print(mapspace)
+			print(landmarks)
