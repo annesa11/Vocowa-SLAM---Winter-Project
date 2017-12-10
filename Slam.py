@@ -158,16 +158,15 @@ def invobserve(r,y,nargout=1):
 
 
 def convert_to_ellipse(Xo,P,n=1,NP=16):
-     """Our aim in this function is to get a resultant ellipse give a distribution with mean Xo and variance P."""
-     alplha=[(2*math.pi/NP)*i for i in range(NP)]      #We want NP point in ellipsein every direction hence uniformly distributed angles 
-     circle=[[math.cos(i),math.sin(i)] for i in alpha]       #We created a unit circle with uniformly distributed NP points 
-     R, D, V = np.linalg.svd(P, full_matrices=True)
-     d=[sqrt(i) for i in D]
-     for i in range(NP):
-          
-     
-
-
+	"""Our aim in this function is to get a resultant ellipse give a distribution with mean Xo and variance P."""
+	alplha=[(2*math.pi/NP)*i for i in range(NP)]      #We want NP point in ellipsein every direction hence uniformly distributed angles 
+	circle=[[math.cos(i),math.sin(i)] for i in alpha]       #We created a unit circle with uniformly distributed NP points 
+	R, D, V = np.linalg.svd(P, full_matrices=True)
+	d=[sqrt(i) for i in D]
+	ellipse=[]
+	for i in range(len(circle)):
+		ellipse.append([n*R[i]*d[i]*circle[i][0],n*R[i]*d[i]*circle[i][1]])
+	return ellipse
 
 
 
