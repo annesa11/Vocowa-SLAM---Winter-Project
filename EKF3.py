@@ -179,7 +179,7 @@ def convert_2_ellipse(x,P,n=3,NP=16):
 	return(X,Y)		
 
 #W=cloister(-4,4,-4,4,7) # Set of external landmarks of the form 2*N
-W=[[2,2,2,2,2,2.5,3,3,3,3.5,4,4,4,3.5,3,2.5,1,5,5,1,4.5,2.5],[2,2.5,3,3.5,4,4,4,3.5,3,3,3,2.5,2,2,2,2,1,1,5,5,3.5,1.5]]
+W=[[2,2,2,2,2,2.5,3,3,3,3.5,4,4,4,3.5,3,2.5,1,5,5,1,4.5,2.5,1,2,3,4,5,6,6,6,6,6,5,4,3,2,1,0,0,0,0,0],[2,2.5,3,3.5,4,4,4,3.5,3,3,3,2.5,2,2,2,2,1,1,5,5,3.5,1.5,0,0,0,0,0,1,2,3,4,5,6,6,6,6,6,5,4,3,2,1]]
 k=np.shape(W)
 N=k[1]  # Total No of landmarks
 
@@ -187,8 +187,8 @@ Walpha=np.matrix(W)
 Xscatter=Walpha[0]
 Yscatter=Walpha[1]
 plt.figure(figsize=(6,6))
-plt.xlim(0,6)
-plt.ylim(0,6)
+plt.xlim(-0.5,6.5)
+plt.ylim(-0.5,6.5)
 plt.scatter(Xscatter,Yscatter,marker='*',color='red')
 
 
@@ -374,8 +374,8 @@ for t in range(125):
 			#print(mapspace)
 	#plt.figure(figsize=(6,6))
 
-	plt.xlim(0,6)
-	plt.ylim(0,6)
+	plt.xlim(-0.5,6.5)
+	plt.ylim(-0.5,6.5)
 		
 	plt.scatter(Xscatter,Yscatter,marker='*',color='red')
 
